@@ -245,7 +245,7 @@ console.log(`Picked option ${funcNum}: ${navText[funcNum]}`);
 console.log("Opening job list...");
 
 await page.evaluate(
-  ({ funcNum, navFunctions }) => {
+  ({ funcNum, navFunctions }: { funcNum: number; navFunctions: string[] }) => {
     eval(navFunctions[funcNum]);
   },
   { funcNum, navFunctions }
@@ -377,10 +377,6 @@ const orbisAppSr = {
   },
 };
 
-function displayQuickSearch(arg0: string, arg1: string, arg2: string) {
-  // make ts happy
-  throw new Error("Function not implemented.");
-}
 function loadPostingTable(
   arg0: string,
   arg1: string,
@@ -406,32 +402,4 @@ async function goToPage(page: Page, pageNumber: number) {
       null
     );
   }, pageNumber);
-}
-
-async function goToPage_1(page: Page) {
-  await page.evaluate(() => {
-    loadPostingTable(
-      "",
-      "",
-      "Forward",
-      `1`,
-      "jobSavedCountCurrentTerm",
-      "",
-      null
-    );
-  }, page);
-}
-
-async function goToPage_2(page: Page) {
-  await page.evaluate(() => {
-    loadPostingTable(
-      "",
-      "",
-      "Forward",
-      `2`,
-      "jobSavedCountCurrentTerm",
-      "",
-      null
-    );
-  }, page);
 }
