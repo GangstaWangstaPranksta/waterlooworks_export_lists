@@ -8,6 +8,10 @@ interface Listing {
   location: string;
   term: string;
   length: string;
+  summary?: string;
+  responsibilities?: string;
+  skills?: string;
+  compensation?: string;
 }
 
 import converter from "json-2-csv";
@@ -82,6 +86,9 @@ browser.on("targetcreated", async (target: Target) => {
           "Job - City:",
           "Employment Location Arrangement:",
           "Work Term Duration:",
+          "Job Summary:",
+          "Job Responsibilities:",
+          "Required Skills:",
         ];
         const key: string = await newPage.evaluate((i: number) => {
           const element = document.querySelector(
@@ -104,11 +111,16 @@ browser.on("targetcreated", async (target: Target) => {
             listing.city = value;
           } else if (key === keys[1]) {
             listing.location = value;
-          } else {
+          } else if (key === keys[2]) {
             listing.length = value;
-          }
-          if (listing.city && listing.location && listing.length) {
-            break;
+          } else if (key === keys[3]) {
+            listing.summary = value;
+          } else if (key === keys[4]) {
+            listing.responsibilities = value;
+          } else if (key === keys[5]) {
+            listing.skills = value;
+          } else if (key === keys[6]) {
+            listing.compensation = value;
           }
         }
       }
