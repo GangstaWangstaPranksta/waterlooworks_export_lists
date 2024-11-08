@@ -15,10 +15,4 @@ To run:
 bun run index.ts
 ```
 
-If desired, to compile to exe:
-
-```bash
-bun build ./index.ts --compile --outfile [name_of_exe]
-```
-
 This project was created using `bun init` in bun v1.1.10. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
