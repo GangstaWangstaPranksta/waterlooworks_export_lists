@@ -364,6 +364,7 @@ console.log("Writing to file...");
 await Bun.write("listings.csv", converter.json2csv(listingsArr));
 page.close();
 browser.close();
+console.log("Finished writing to file!");
 
 const orbisAppSr = {
   // make ts happy :(
