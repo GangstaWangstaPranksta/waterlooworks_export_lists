@@ -103,9 +103,7 @@ browser.on("targetcreated", async (target: Target) => {
             const element = document.querySelector(
               `#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(${i}) > td:nth-child(2)`
             );
-            return element && element.textContent
-              ? element.textContent.match(/[0-9[A-z].+/g)?.[0] || ""
-              : "";
+            return element && element.innerText ? element.innerText || "" : "";
           }, i);
           if (key === keys[0]) {
             listing.city = value;
