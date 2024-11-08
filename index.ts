@@ -372,8 +372,23 @@ while (true) {
 console.log("Writing to file...");
 //Bun.write("listings.json", JSON.stringify(listingsArr));
 await Bun.write("listings.csv", converter.json2csv(listingsArr));
-page.close();
-browser.close();
+
+try {
+  console.log("Closing page...");
+  await page.close();
+  console.log("Page closed.");
+} catch (error) {
+  console.error("Error closing page:", error);
+}
+
+try {
+  console.log("Closing browser...");
+  await browser.close();
+  console.log("Browser closed.");
+} catch (error) {
+  console.error("Error closing browser:", error);
+}
+
 console.log("Finished writing to file!");
 
 const orbisAppSr = {
