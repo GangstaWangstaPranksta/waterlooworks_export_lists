@@ -14,6 +14,7 @@ interface Listing {
   compensation?: string;
 }
 
+import { parseArgs } from "util";
 import converter from "json-2-csv";
 import puppeteer from "puppeteer";
 
@@ -27,6 +28,20 @@ const browser = await puppeteer.launch({
 
 let listingsArr: Listing[] = [];
 let pages: Page[] = [];
+
+const { values, positionals } = parseArgs({
+  args: Bun.argv,
+  options: {
+    username: {
+      type: "string",
+    },
+    password: {
+      type: "string",
+    },
+  },
+  strict: true,
+  allowPositionals: true,
+});
 
 browser.on("targetcreated", async (target: Target) => {
   if (target.type() === "page") {
@@ -137,18 +152,35 @@ let jobsIdArray: string[] = [];
 const page = await browser.newPage();
 await page.goto("https://waterlooworks.uwaterloo.ca/waterloo.htm?action=login");
 console.log("Atempting to login...");
-
-while (page.url() !== "https://adfs.uwaterloo.ca/adfs/ls/") {
-  await Bun.sleep(10);
+{
+  let username, password;
+  if (values.username && values.password) {
+    username = values.username;
+    password = values.password;
+  } else if (process.env.WAT_IM_USERNAME && process.env.WAT_IM_PASSWORD) {
+    username = process.env.WAT_IM_USERNAME;
+    password = process.env.WAT_IM_PASSWORD;
+  }
+  if (username && password) {
+    //let errorElement = await page.$("span#errorText");
+    await page.waitForSelector("#userNameInput");
+    await page.type("#userNameInput", `${username}@uwaterloo.ca`);
+    await page.keyboard.press("Enter");
+    await page.waitForSelector("#passwordInput");
+    await page.type("#passwordInput", password);
+    await page.keyboard.press("Enter");
+    await page.waitForNavigation({ waitUntil: "networkidle0" });
+    if (page.url().startsWith("https://adfs.uwaterloo.ca/adfs/ls/")) {
+      console.log("Login failed. Exiting...");
+      await page.close();
+      await browser.close();
+      process.exit(1);
+    }
+  } else {
+    console.log("Login information not found. Manually login to continue.");
+  }
 }
-await page.type(
-  "#userNameInput",
-  `${process.env.WAT_IM_USERNAME}@uwaterloo.ca`
-);
-await page.keyboard.press("Enter");
-await page.waitForSelector("#passwordInput");
-await page.type("#passwordInput", process.env.WAT_IM_PASSWORD || "");
-await page.keyboard.press("Enter");
+
 while (
   page.url() !==
   "https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm"
