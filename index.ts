@@ -136,7 +136,19 @@ let jobsIdArray: string[] = [];
 // open a page and wait until url is the job page
 const page = await browser.newPage();
 await page.goto("https://waterlooworks.uwaterloo.ca/waterloo.htm?action=login");
-console.log("Waiting for login...");
+console.log("Atempting to login...");
+
+while (page.url() !== "https://adfs.uwaterloo.ca/adfs/ls/") {
+  await Bun.sleep(10);
+}
+await page.type(
+  "#userNameInput",
+  `${process.env.WAT_IM_USERNAME}@uwaterloo.ca`
+);
+await page.keyboard.press("Enter");
+await page.waitForSelector("#passwordInput");
+await page.type("#passwordInput", process.env.WAT_IM_PASSWORD || "");
+await page.keyboard.press("Enter");
 while (
   page.url() !==
   "https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm"
