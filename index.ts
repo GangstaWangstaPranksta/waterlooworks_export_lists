@@ -176,6 +176,7 @@ console.log("Atempting to login...");
       await browser.close();
       process.exit(1);
     }
+    console.log("Log in successful, waiting for 2FA...");
   } else {
     console.log("Login information not found. Manually login to continue.");
   }
@@ -270,9 +271,9 @@ for (let i = 0; i < navFunctions.length; i++) {
 }
 
 console.log("Finished removing irrelevant options...");
-console.log(`Select a job list option (${0}-${navFunctions.length - 1})...`);
+console.log(`Select a job list option (${0}-${navFunctions.length - 1}):`);
 for (let i = 0; i < navFunctions.length; i++) {
-  console.log(`${i}: ${navText[i]}`);
+  console.log(`\t${i}: ${navText[i]}`);
 }
 
 let funcNum: number = 0;
