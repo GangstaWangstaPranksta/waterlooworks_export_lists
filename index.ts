@@ -412,6 +412,10 @@ for (let jobIdIndex = 0; jobIdIndex < jobsIdArray.length; jobIdIndex++) {
     },
     { id, action, initialSearchAction }
   );
+  while (pages.length > 20) {
+    console.log("Waiting for some pages to close...");
+    await Bun.sleep(1000);
+  }
 }
 
 while (true) {
