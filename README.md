@@ -33,4 +33,7 @@ bun run index.ts
 bun run index.ts --username [username] --password [password]
 ```
 
+> [!NOTE]
+> CLI args takes precedence over `.env` config
+
 This project was created using `bun init` in bun v1.1.10. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
