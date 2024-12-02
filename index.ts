@@ -1,4 +1,4 @@
-import type { Page, Target } from "puppeteer-core";
+import type { Page, Target } from "puppeteer";
 
 interface Listing {
   id: string;
@@ -15,13 +15,14 @@ interface Listing {
 }
 
 import converter from "json-2-csv";
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
 
 const browser = await puppeteer.launch({
+  browser: "chrome",
   headless: false,
   defaultViewport: null,
   args: ["--window-size=1280,800"],
-  executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  //executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
 });
 
 let listingsArr: Listing[] = [];
@@ -269,16 +270,24 @@ console.log("Getting job ids...");
 
 await Bun.sleep(500);
 
-await page.waitForSelector("#postingsTablePlaceholder > div > div > ul > li");
+await page.waitForSelector("span.badge.badge-info");
+//await page.waitForSelector("#postingsTablePlaceholder > div > div > ul > li");
+const totalResults: number = await page.evaluate(() => {
+  return parseInt(
+    document.querySelector("span.badge.badge-info")?.innerText || "0"
+  );
+});
 
 const pageCount =
-  (await page.evaluate(() => {
-    return (
-      document.querySelectorAll(
-        "#postingsTablePlaceholder > div:nth-child(4) > div > ul > li"
-      ).length - 4
-    );
-  })) || 1;
+  totalResults > 100 // if there are more than 100 results, we need to get the total page count, otherqise it's just 1
+    ? await page.evaluate(() => {
+        return (
+          document.querySelectorAll(
+            "#postingsTablePlaceholder > div:nth-child(4) > div > ul > li"
+          ).length - 4
+        );
+      })
+    : 1;
 console.log(`Total page count: ${pageCount}`);
 
 for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
