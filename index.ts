@@ -511,3 +511,18 @@ async function goToPage(page: Page, pageNumber: number) {
     );
   }, pageNumber);
 }
+
+async function shortlistPosting(id: number) {
+  await page.evaluate((id: number) => {
+    toggleFavouritePosting(
+      this,
+      id,
+      false,
+      "",
+      "Reverse",
+      "1",
+      "jobViewCountCurrentTerm",
+      ""
+    );
+  }, id);
+}
