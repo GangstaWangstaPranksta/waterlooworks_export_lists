@@ -6,6 +6,7 @@ interface Listing {
   employer: string;
   city: string;
   location: string;
+  province: string;
   term: string;
   length: string;
   summary?: string;
@@ -43,6 +44,70 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
 });
 
+async function extractListingDetails(
+  newPage: Page,
+  listing: Listing
+): Promise<void> {
+  const keys: string[] = [
+    "Job - City:",
+    "Job - Province/State:",
+    "Employment Location Arrangement:",
+    "Work Term Duration:",
+    "Job Summary:",
+    "Job Responsibilities:",
+    "Required Skills:",
+    "Compensation and Benefits:",
+  ];
+
+  const keyToPropertyMap: { [key: string]: keyof Listing } = {
+    [keys[0]]: "city",
+    [keys[1]]: "province",
+    [keys[2]]: "location",
+    [keys[3]]: "length",
+    [keys[4]]: "summary",
+    [keys[5]]: "responsibilities",
+    [keys[6]]: "skills",
+    [keys[7]]: "compensation",
+  };
+
+  try {
+    const tableLength = await newPage.evaluate(() => {
+      const tbody = document.querySelectorAll("tbody")[1]; // Select correct tbody
+      return tbody ? tbody.children.length : 0; // Handle case where tbody might not exist
+    });
+
+    for (let i = 1; i <= tableLength; i++) {
+      const keyValuePair = await newPage.evaluate(
+        (i: number, keys: string[]) => {
+          const keyElement = document.querySelector(
+            `#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(${i}) > td:nth-child(1)`
+          );
+          const valueElement = document.querySelector(
+            `#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(${i}) > td:nth-child(2)`
+          );
+
+          let keyText =
+            keyElement?.textContent?.match(/[^\t][A-z].+/g)?.[0] || "";
+          let valueText = valueElement?.innerText || "";
+
+          return { key: keyText, value: valueText };
+        },
+        i,
+        keys
+      );
+
+      if (keys.includes(keyValuePair.key)) {
+        const propertyName = keyToPropertyMap[keyValuePair.key];
+        if (propertyName) {
+          listing[propertyName] = keyValuePair.value;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error in extractListingDetails:", error); // Basic error logging, improve as needed
+  }
+}
+
 browser.on("targetcreated", async (target: Target) => {
   if (target.type() === "page") {
     const newPage = await target.page();
@@ -56,92 +121,52 @@ browser.on("targetcreated", async (target: Target) => {
         title: "",
         employer: "",
         city: "",
+        province: "",
         location: "",
         term: "",
         length: "",
       };
-      await newPage.waitForSelector("#postingDiv");
-      listing.id = await newPage.evaluate(() => {
-        const element = document.querySelectorAll("div h1")[1];
-        if (element && element.textContent) {
-          const match = element.textContent.match(/\d+/g);
-          return match ? match[0] : "";
-        }
-        return "";
-      });
-      listing.title = await newPage.evaluate(() => {
-        const element = document.querySelector(
-          "#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(3) > td:nth-child(2) > span"
-        );
-        return element && element.textContent
-          ? element.textContent.match(/[^\t][A-z].+/g)?.[0] || ""
-          : "";
-      });
-      listing.term = await newPage.evaluate(() => {
-        const element = document.querySelector(
-          "#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(1) > td:nth-child(2)"
-        );
-        return element && element.textContent
-          ? element.textContent.match(/[0-9[A-z].+/g)?.[0] || ""
-          : "";
-      });
-      listing.employer = await newPage.evaluate(() => {
-        const element = document.querySelector("div h2");
-        if (element && element.textContent) {
-          return element?.textContent?.match(/[A-z].+/g)?.[0] || "";
-        }
-        return "";
-      });
 
-      const tableLength = await newPage.evaluate(() => {
-        return document.querySelectorAll("tbody")[1].children.length;
-      });
+      try {
+        await newPage.waitForSelector("#postingDiv");
 
-      for (let i = 1; i <= tableLength; i++) {
-        const keys: string[] = [
-          "Job - City:",
-          "Employment Location Arrangement:",
-          "Work Term Duration:",
-          "Job Summary:",
-          "Job Responsibilities:",
-          "Required Skills:",
-        ];
-        const key: string = await newPage.evaluate((i: number) => {
+        listing.id = await newPage.evaluate(() => {
+          const element = document.querySelectorAll("div h1")[1];
+          return element?.textContent?.match(/\d+/g)?.[0] || "";
+        });
+
+        listing.title = await newPage.evaluate(() => {
           const element = document.querySelector(
-            `#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(${i}) > td:nth-child(1)`
+            "#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(3) > td:nth-child(2) > span"
           );
-          return element && element.textContent
-            ? element.textContent.match(/[^\t][A-z].+/g)?.[0] || ""
-            : "";
-        }, i);
-        if (keys.includes(key)) {
-          const value = await newPage.evaluate((i: number) => {
-            const element = document.querySelector(
-              `#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(${i}) > td:nth-child(2)`
-            );
-            return element && element.innerText ? element.innerText || "" : "";
-          }, i);
-          if (key === keys[0]) {
-            listing.city = value;
-          } else if (key === keys[1]) {
-            listing.location = value;
-          } else if (key === keys[2]) {
-            listing.length = value;
-          } else if (key === keys[3]) {
-            listing.summary = value;
-          } else if (key === keys[4]) {
-            listing.responsibilities = value;
-          } else if (key === keys[5]) {
-            listing.skills = value;
-          } else if (key === keys[6]) {
-            listing.compensation = value;
-          }
+          return element?.textContent?.match(/[^\t][A-z].+/g)?.[0] || "";
+        });
+
+        listing.term = await newPage.evaluate(() => {
+          const element = document.querySelector(
+            "#postingDiv > div:nth-child(1) > div.panel-body > table > tbody > tr:nth-child(1) > td:nth-child(2)"
+          );
+          return element?.textContent?.match(/[0-9[A-z].+/g)?.[0] || "";
+        });
+
+        listing.employer = await newPage.evaluate(() => {
+          const element = document.querySelector("div h2");
+          return element?.textContent?.match(/[A-z].+/g)?.[0] || "";
+        });
+
+        await extractListingDetails(newPage, listing);
+
+        listingsArr.push(listing);
+        pages = pages.filter((page) => page !== newPage);
+        await newPage.close();
+      } catch (error) {
+        console.error("Error processing new page:", error, newPage.url()); // Log error and page URL for debugging
+        // Decide how to handle errors: skip listing, retry, etc. For now, just logging and closing page.
+        if (newPage && !newPage.isClosed()) {
+          // Check if page is still valid before closing
+          await newPage.close();
         }
       }
-
-      listingsArr.push(listing);
-      pages = pages.filter((page) => page !== newPage);
-      newPage.close();
     }
   }
 });
