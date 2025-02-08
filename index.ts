@@ -324,7 +324,7 @@ const totalResults: number = await page.evaluate(() => {
 });
 
 const pageCount =
-  totalResults > 100 // if there are more than 100 results, we need to get the total page count, otherqise it's just 1
+  totalResults > 100 // if there are more than 100 results, we need to get the total page count, otherwise it's just 1
     ? await page.evaluate(() => {
         return (
           document.querySelectorAll(
@@ -428,7 +428,6 @@ while (true) {
 
 //write json and csv to file using bun io
 console.log("Writing to file...");
-//Bun.write("listings.json", JSON.stringify(listingsArr));
 await Bun.write("listings.csv", converter.json2csv(listingsArr));
 
 try {
